@@ -1,17 +1,37 @@
 package ru.sgu;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
-    public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.core.JdbcTemplate;
+import ru.sgu.model.User;
+import ru.sgu.service.EmailService;
+import ru.sgu.service.UserService;
 
-        for (int i = 1; i <= 20; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
-        }
+import java.util.Optional;
+
+@SpringBootApplication
+//Добавление пользователя в БД и его активация
+public class Main {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Main.class, args);
+    }
+
+    @Bean
+    public CommandLineRunner demo(JdbcTemplate jdbcTemplate, UserService userService, EmailService emailService) {
+        return (args) -> {
+
+            String username = "testuser";
+            String email = "arbuzov.matv.y@yandex.ru";
+            String password = "password";
+
+            //Добавление пользователя в БД и отправка письма на почту
+            userService.registerUser(username, email, password);
+            System.out.println("Пользователь зарегистрирован, необходимо активировать учётную запись," +
+                    " нажав на ссылку в письме");
+
+        };
     }
 }
