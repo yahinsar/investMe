@@ -22,6 +22,9 @@ public class User {
     @Column(nullable = false)
     private boolean enabled;
 
+    @Column
+    private String activationToken;
+
     public Long getId() {
         return id;
     }
@@ -60,5 +63,13 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getActivationToken() {
+        return activationToken;
+    }
+
+    public void setActivationToken(String activationToken) {
+        this.activationToken = activationToken;
     }
 }
