@@ -16,11 +16,14 @@ import java.util.Optional;
 @RequestMapping("/api/v1/passport")
 public class PassportController {
 
-    @Autowired
-    private PassportService passportService;
+    private final PassportService passportService;
+    private final UserService userService;
 
     @Autowired
-    private UserService userService;
+    public PassportController(PassportService passportService, UserService userService) {
+        this.passportService = passportService;
+        this.userService = userService;
+    }
 
     @PostMapping
     public ResponseEntity<Passport> createPassport(@RequestBody Passport passport) {
@@ -95,6 +98,20 @@ public class PassportController {
             }
         } else {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/check-age")
+    public ResponseEntity<String> checkUserAge() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        boolean is18yo = passportService.isUser18yo(user.getId());
+        if (is18yo) {
+            return ResponseEntity.ok("Добро пожаловать в ИНВЕСТИЦИИ");
+        } else {
+            return ResponseEntity.ok("Тебе доступ запрещен. Пошел вон отсюда.");
         }
     }
 }
