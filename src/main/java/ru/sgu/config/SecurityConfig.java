@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/api/v1/registration/activate").permitAll()
                         .requestMatchers("/api/v1/authenticate").permitAll()
+                        .requestMatchers("/api/v1/passport/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
