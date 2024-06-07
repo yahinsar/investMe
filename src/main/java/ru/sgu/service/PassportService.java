@@ -21,6 +21,10 @@ public class PassportService {
         this.passportRepository = passportRepository;
     }
 
+    public void savePassport(Passport passport) {
+        passportRepository.save(passport);
+    }
+
     public Passport save(Passport passport) {
         return passportRepository.save(passport);
     }

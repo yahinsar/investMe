@@ -10,6 +10,9 @@ import ru.sgu.model.User;
 import ru.sgu.service.PassportService;
 import ru.sgu.service.UserService;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.regex.Pattern;
 import java.util.Optional;
 
 @RestController
@@ -26,16 +29,76 @@ public class PassportController {
     }
 
     @PostMapping
-    public ResponseEntity<Passport> createPassport(@RequestBody Passport passport) {
+    public ResponseEntity<String> createPassport(@RequestBody Passport passport) {
+        String validationMessage = validatePassportData(passport);
+        if (!validationMessage.isEmpty()) {
+            return ResponseEntity.badRequest().body(validationMessage);
+        }
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
-        Optional<User> user = userService.findByUsername(username);
-        if (user.isPresent()) {
-            passport.setUser(user.get());
-            Passport savedPassport = passportService.save(passport);
-            return ResponseEntity.ok(savedPassport);
+        User user = userService.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        passport.setUser(user);
+        passportService.savePassport(passport);
+
+        String welcomeMessage = generateWelcomeMessage(passport);
+        return ResponseEntity.ok(welcomeMessage);
+    }
+
+    private String validatePassportData(Passport passport) {
+        if (passport.getLastName() == null || passport.getLastName().isEmpty())
+            return "Фамилия не может быть пустой.";
+        if (passport.getFirstName() == null || passport.getFirstName().isEmpty())
+            return "Имя не может быть пустым.";
+        if (passport.getMiddleName() == null || passport.getMiddleName().isEmpty())
+            return "Отчество не может быть пустым.";
+        if (passport.getGender() == null || (!passport.getGender().equals("Мужской") && !passport.getGender().equals("Женский")))
+            return "Пол не может быть пустым (введите \"Мужской\" или \"Женский\").";
+        if (!isValidDate(passport.getDateOfBirth()))
+            return "Дата рождения должна быть в формате YYYY-MM-DD.";
+        if (passport.getPlaceOfBirth() == null || passport.getPlaceOfBirth().isEmpty())
+            return "Место рождения не может быть пустым.";
+        if (passport.getPassportSeries() == null || !Pattern.matches("\\d{4}", passport.getPassportSeries()))
+            return "Серия паспорта должна состоять из 4 цифр.";
+        if (passport.getPassportNumber() == null || !Pattern.matches("\\d{6}", passport.getPassportNumber()))
+            return "Номер паспорта должен состоять из 6 цифр.";
+        if (!isValidDate(passport.getIssueDate()))
+            return "Дата выдачи должна быть в формате YYYY-MM-DD.";
+        if (passport.getIssuedBy() == null || passport.getIssuedBy().isEmpty())
+            return "Поле \"Кем выдан\" не может быть пустым.";
+        if (passport.getDepartmentCode() == null || !Pattern.matches("\\d{3}-\\d{3}", passport.getDepartmentCode()))
+            return "Код подразделнеия должен быть в формате XXX-XXX.";
+        if (passport.getRegistrationPlace() == null || passport.getRegistrationPlace().isEmpty())
+            return "Место регистрации не может быть пустым.";
+        if (passport.getResidencePlace() == null || passport.getResidencePlace().isEmpty())
+            return "Место жительства не может быть пустым (обязательное условие для богатого инвестора).";
+        return "";
+    }
+
+    private String generateWelcomeMessage(Passport passport) {
+        String greeting = "Ну привет";
+        if (passport.getGender().equals("Мужской")) {
+            greeting += ", мистер " + passport.getLastName() + "! Инвестируй в нас, мы очень умные ребята (честно + честно).";
         } else {
-            return ResponseEntity.badRequest().build();
+            greeting += ", миссис " + passport.getLastName() + "! Инвестируй в нас, мы очень умные ребята (честно + честно).";
+        }
+
+        boolean is18yo = passportService.isUser18yo(passport.getUser().getId());
+        if (is18yo) {
+            greeting += "\n\nДобро пожаловать в ИНВЕСТИЦИИ";
+        } else {
+            greeting += "\n\nТебе доступ запрещен. Пошел вон отсюда.";
+        }
+
+        return greeting;
+    }
+
+    private boolean isValidDate(String date) {
+        try {
+            LocalDate.parse(date);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
         }
     }
 
@@ -50,10 +113,16 @@ public class PassportController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Passport> updatePassport(@PathVariable Long id, @RequestBody Passport passportDetails) {
+    public ResponseEntity<String> updatePassport(@PathVariable Long id, @RequestBody Passport passportDetails) {
         Optional<Passport> passport = passportService.findById(id);
         if (passport.isPresent()) {
             Passport passportToUpdate = passport.get();
+
+            String validationMessage = validatePassportData(passportDetails);
+            if (!validationMessage.isEmpty()) {
+                return ResponseEntity.badRequest().body(validationMessage);
+            }
+
             passportToUpdate.setLastName(passportDetails.getLastName());
             passportToUpdate.setFirstName(passportDetails.getFirstName());
             passportToUpdate.setMiddleName(passportDetails.getMiddleName());
@@ -67,8 +136,11 @@ public class PassportController {
             passportToUpdate.setDepartmentCode(passportDetails.getDepartmentCode());
             passportToUpdate.setRegistrationPlace(passportDetails.getRegistrationPlace());
             passportToUpdate.setResidencePlace(passportDetails.getResidencePlace());
-            Passport updatedPassport = passportService.save(passportToUpdate);
-            return ResponseEntity.ok(updatedPassport);
+
+            //Passport updatedPassport = passportService.save(passportToUpdate);
+
+            String welcomeMessage = generateWelcomeMessage(passportToUpdate);
+            return ResponseEntity.ok(welcomeMessage);
         } else {
             return ResponseEntity.notFound().build();
         }
