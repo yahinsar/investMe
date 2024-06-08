@@ -12,8 +12,8 @@ import ru.sgu.service.UserService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.regex.Pattern;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1/passport")
@@ -29,20 +29,50 @@ public class PassportController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createPassport(@RequestBody Passport passport) {
+    public ResponseEntity<Passport> createPassport(@RequestBody Passport passport) {
         String validationMessage = validatePassportData(passport);
         if (!validationMessage.isEmpty()) {
-            return ResponseEntity.badRequest().body(validationMessage);
+            return ResponseEntity.badRequest().body(null);
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         User user = userService.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         passport.setUser(user);
-        passportService.savePassport(passport);
+        Passport savedPassport = passportService.save(passport);
+        return ResponseEntity.ok(savedPassport);
+    }
 
-        String welcomeMessage = generateWelcomeMessage(passport);
-        return ResponseEntity.ok(welcomeMessage);
+    @PutMapping("/{id}")
+    public ResponseEntity<Passport> updatePassport(@PathVariable Long id, @RequestBody Passport passportDetails) {
+        Optional<Passport> passport = passportService.findById(id);
+        if (passport.isPresent()) {
+            Passport passportToUpdate = passport.get();
+
+            String validationMessage = validatePassportData(passportDetails);
+            if (!validationMessage.isEmpty()) {
+                return ResponseEntity.badRequest().body(null);
+            }
+
+            passportToUpdate.setLastName(passportDetails.getLastName());
+            passportToUpdate.setFirstName(passportDetails.getFirstName());
+            passportToUpdate.setMiddleName(passportDetails.getMiddleName());
+            passportToUpdate.setGender(passportDetails.getGender());
+            passportToUpdate.setDateOfBirth(passportDetails.getDateOfBirth());
+            passportToUpdate.setPlaceOfBirth(passportDetails.getPlaceOfBirth());
+            passportToUpdate.setPassportSeries(passportDetails.getPassportSeries());
+            passportToUpdate.setPassportNumber(passportDetails.getPassportNumber());
+            passportToUpdate.setIssueDate(passportDetails.getIssueDate());
+            passportToUpdate.setIssuedBy(passportDetails.getIssuedBy());
+            passportToUpdate.setDepartmentCode(passportDetails.getDepartmentCode());
+            passportToUpdate.setRegistrationPlace(passportDetails.getRegistrationPlace());
+            passportToUpdate.setResidencePlace(passportDetails.getResidencePlace());
+
+            Passport updatedPassport = passportService.save(passportToUpdate);
+            return ResponseEntity.ok(updatedPassport);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     private String validatePassportData(Passport passport) {
@@ -75,6 +105,15 @@ public class PassportController {
         return "";
     }
 
+    private boolean isValidDate(String date) {
+        try {
+            LocalDate.parse(date);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
     private String generateWelcomeMessage(Passport passport) {
         String greeting = "Ну привет";
         if (passport.getGender().equals("Мужской")) {
@@ -93,54 +132,11 @@ public class PassportController {
         return greeting;
     }
 
-    private boolean isValidDate(String date) {
-        try {
-            LocalDate.parse(date);
-            return true;
-        } catch (DateTimeParseException e) {
-            return false;
-        }
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Passport> getPassport(@PathVariable Long id) {
         Optional<Passport> passport = passportService.findById(id);
         if (passport.isPresent()) {
             return ResponseEntity.ok(passport.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updatePassport(@PathVariable Long id, @RequestBody Passport passportDetails) {
-        Optional<Passport> passport = passportService.findById(id);
-        if (passport.isPresent()) {
-            Passport passportToUpdate = passport.get();
-
-            String validationMessage = validatePassportData(passportDetails);
-            if (!validationMessage.isEmpty()) {
-                return ResponseEntity.badRequest().body(validationMessage);
-            }
-
-            passportToUpdate.setLastName(passportDetails.getLastName());
-            passportToUpdate.setFirstName(passportDetails.getFirstName());
-            passportToUpdate.setMiddleName(passportDetails.getMiddleName());
-            passportToUpdate.setGender(passportDetails.getGender());
-            passportToUpdate.setDateOfBirth(passportDetails.getDateOfBirth());
-            passportToUpdate.setPlaceOfBirth(passportDetails.getPlaceOfBirth());
-            passportToUpdate.setPassportSeries(passportDetails.getPassportSeries());
-            passportToUpdate.setPassportNumber(passportDetails.getPassportNumber());
-            passportToUpdate.setIssueDate(passportDetails.getIssueDate());
-            passportToUpdate.setIssuedBy(passportDetails.getIssuedBy());
-            passportToUpdate.setDepartmentCode(passportDetails.getDepartmentCode());
-            passportToUpdate.setRegistrationPlace(passportDetails.getRegistrationPlace());
-            passportToUpdate.setResidencePlace(passportDetails.getResidencePlace());
-
-            //Passport updatedPassport = passportService.save(passportToUpdate);
-
-            String welcomeMessage = generateWelcomeMessage(passportToUpdate);
-            return ResponseEntity.ok(welcomeMessage);
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -166,7 +162,7 @@ public class PassportController {
             if (passport != null) {
                 return ResponseEntity.ok(passport);
             } else {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.ok(null); // Возвращаем null, если паспорт не найден
             }
         } else {
             return ResponseEntity.badRequest().build();
@@ -186,4 +182,23 @@ public class PassportController {
             return ResponseEntity.ok("Тебе доступ запрещен. Пошел вон отсюда.");
         }
     }
+
+    @GetMapping("/welcome-message")
+    public ResponseEntity<String> getWelcomeMessage() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        Optional<User> user = userService.findByUsername(username);
+        if (user.isPresent()) {
+            Passport passport = passportService.findByUserId(user.get().getId());
+            if (passport != null) {
+                String welcomeMessage = generateWelcomeMessage(passport);
+                return ResponseEntity.ok(welcomeMessage);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 }

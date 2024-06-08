@@ -1,0 +1,10 @@
+.header {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.logo {
+  height: 100px;
+  cursor: pointer;
+}
