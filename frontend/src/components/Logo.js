@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from './images/logo.png'; // Замените на фактический путь к вашему логотипу
+import logo from './images/logo.png';
 import './Logo.css';
 
 function Header() {

@@ -3,9 +3,9 @@ body {
   background-size: cover;
   font-family: 'Roboto', sans-serif;
   display: flex;
-  justify-content: center; /* Центрирование по горизонтали */
-  align-items: center; /* Центрирование по вертикали */
-  height: 100vh; /* Высота 100% от окна браузера */
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
   margin: 0;
 }
 
@@ -22,7 +22,7 @@ body {
 
 h2 {
   font-size: 2em;
-  color: #fff;
+  color: #000;
 }
 
 form {

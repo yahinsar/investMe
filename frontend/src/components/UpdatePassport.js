@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../axiosConfig';
-import { useNavigate } from 'react-router-dom';
-import './PassportForm.css';
+import { useLocation, useNavigate } from 'react-router-dom';
+import './UpdatePassport.css';
 import Logo from './Logo';
 
-function PassportForm() {
+function UpdatePassport() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [passport, setPassport] = useState({
     lastName: '',
     firstName: '',
@@ -22,7 +24,11 @@ function PassportForm() {
     user: {}
   });
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (location.state && location.state.passport) {
+      setPassport(location.state.passport);
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,21 +39,21 @@ function PassportForm() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/v1/passport', passport, {
+      await axios.put(`/api/v1/passport/${passport.id}`, passport, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Паспортные данные успешно сохранены');
+      alert('Паспортные данные успешно обновлены.');
       navigate('/home');
     } catch (error) {
-        if (error.response && error.response.data) {
-              alert(error.response.data);
-        } else {
-              alert('Произошла непредвиденная ошибка.');
-        }
+            if (error.response && error.response.data) {
+                    alert(error.response.data);
+                  } else {
+                    alert('Произошла непредвиденная ошибка.');
+                  }
     }
   };
 
-  return (
+return (
       <div>
         <Logo />
         <div className="passportForm-container">
@@ -113,4 +119,4 @@ function PassportForm() {
     );
   }
 
-export default PassportForm;
+export default UpdatePassport;

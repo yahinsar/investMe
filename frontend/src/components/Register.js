@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from '../axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import './Register.css';
 import Logo from './Logo';
 
 function Register() {
@@ -13,13 +14,13 @@ function Register() {
     event.preventDefault();
     try {
       await axios.post('/api/v1/registration', { username, email, password });
-      alert('Registration successful. Please check your email for activation link.');
+      alert('Пользователь зарегистрирован, необходимо активировать учётную запись, нажав на ссылку в письме.');
       navigate('/');
     } catch (error) {
       if (error.response && error.response.data) {
               alert(error.response.data);
             } else {
-              alert('An unexpected error occurred.');
+              alert('Произошла непредвиденная ошибка.');
             }
     }
   };
@@ -27,7 +28,10 @@ function Register() {
   return (
     <div>
       <Logo />
+      <div className="register-container">
+      <Logo />
       <h2>Регистрация</h2>
+
       <form onSubmit={handleSubmit}>
         <div>
           <label>Логин:</label>
@@ -43,6 +47,7 @@ function Register() {
         </div>
         <button type="submit">Зарегистрироваться</button>
       </form>
+          </div>
     </div>
   );
 }

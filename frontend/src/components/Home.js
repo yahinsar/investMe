@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../axiosConfig';
 import Logo from './Logo';
+import './Home.css';
+import { useNavigate } from 'react-router-dom';
 
 function Home() {
   const [passport, setPassport] = useState(null);
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPassport = async () => {
@@ -20,16 +23,16 @@ function Home() {
         });
         setWelcomeMessage(welcomeResponse.data);
       } catch (error) {
-          if (error.response && error.response.data) {
-              alert(error.response.data);
-          } else {
-              alert('Произошла непредвиденная ошибка.');
-          }
+        alert('Произошла непредвиденная ошибка.');
       }
     };
 
     fetchPassport();
   }, []);
+
+  const handleUpdateClick = () => {
+    navigate('/update', { state: { passport } });
+  };
 
   if (!passport) {
     return <div>Загрузка...</div>;
@@ -38,21 +41,28 @@ function Home() {
   return (
     <div>
       <Logo />
-      <h1 style={{ fontWeight: 'bold' }}>{welcomeMessage}</h1>
-      <h2>Passport Information</h2>
-      <p><strong>Last Name:</strong> {passport.lastName}</p>
-      <p><strong>First Name:</strong> {passport.firstName}</p>
-      <p><strong>Middle Name:</strong> {passport.middleName}</p>
-      <p><strong>Gender:</strong> {passport.gender}</p>
-      <p><strong>Date of Birth:</strong> {passport.dateOfBirth}</p>
-      <p><strong>Place of Birth:</strong> {passport.placeOfBirth}</p>
-      <p><strong>Passport Series:</strong> {passport.passportSeries}</p>
-      <p><strong>Passport Number:</strong> {passport.passportNumber}</p>
-      <p><strong>Issue Date:</strong> {passport.issueDate}</p>
-      <p><strong>Issued By:</strong> {passport.issuedBy}</p>
-      <p><strong>Department Code:</strong> {passport.departmentCode}</p>
-      <p><strong>Registration Place:</strong> {passport.registrationPlace}</p>
-      <p><strong>Residence Place:</strong> {passport.residencePlace}</p>
+      <div className="home-container">
+        <div className="welcome-message-container">
+          <h1 className="welcome-message">{welcomeMessage}</h1>
+        </div>
+        <div className="passport-info">
+          <h2>Данные паспорта</h2>
+          <p><strong>Фамилия:</strong> {passport.lastName}</p>
+          <p><strong>Имя:</strong> {passport.firstName}</p>
+          <p><strong>Отчество:</strong> {passport.middleName}</p>
+          <p><strong>Пол:</strong> {passport.gender}</p>
+          <p><strong>Дата рождения:</strong> {passport.dateOfBirth}</p>
+          <p><strong>Место рождения:</strong> {passport.placeOfBirth}</p>
+          <p><strong>Серия паспорта:</strong> {passport.passportSeries}</p>
+          <p><strong>Номер паспорта:</strong> {passport.passportNumber}</p>
+          <p><strong>Дата выдачи:</strong> {passport.issueDate}</p>
+          <p><strong>Кем выдан:</strong> {passport.issuedBy}</p>
+          <p><strong>Код подразделения:</strong> {passport.departmentCode}</p>
+          <p><strong>Место регистрации:</strong> {passport.registrationPlace}</p>
+          <p><strong>Место проживания:</strong> {passport.residencePlace}</p>
+          <button onClick={handleUpdateClick}>Обновить информацию</button>
+        </div>
+      </div>
     </div>
   );
 }

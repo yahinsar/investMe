@@ -16,7 +16,6 @@ function Login() {
       const token = response.data.jwtToken;
       localStorage.setItem('token', token);
 
-      // Проверка, активирован ли пользователь
       const userResponse = await axios.get(`/api/v1/users/isEnabled?username=${username}`);
       const isEnabled = userResponse.data;
 
@@ -25,7 +24,6 @@ function Login() {
         return;
       }
 
-      // Проверка наличия данных паспорта
       const passportResponse = await axios.get('/api/v1/passport/user', {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -39,7 +37,7 @@ function Login() {
         if (error.response && error.response.data) {
             alert(error.response.data);
         } else {
-            alert('An unexpected error occurred.');
+            alert('Произошла непредвиденная ошибка.');
         }
     }
   };
@@ -49,7 +47,7 @@ function Login() {
       <Logo />
       <div className="login-container">
         <Logo />
-        <h2>Login</h2>
+        <h2>Вход</h2>
         <form onSubmit={handleSubmit}>
           <div>
             <label>Логин:</label>

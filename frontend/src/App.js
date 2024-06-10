@@ -6,6 +6,7 @@ import ActivateAccount from './components/ActivateAccount';
 import PassportForm from './components/PassportForm';
 import Home from './components/Home';
 import HomePage from './components/HomePage';
+import UpdatePassport from './components/UpdatePassport';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/activate" element={<ActivateAccount />} />
           <Route path="/passport" element={<PassportForm />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/update" element={<UpdatePassport />} />
         </Routes>
       </div>
     </Router>
