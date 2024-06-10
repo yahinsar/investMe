@@ -29,10 +29,10 @@ public class PassportController {
     }
 
     @PostMapping
-    public ResponseEntity<Passport> createPassport(@RequestBody Passport passport) {
+    public ResponseEntity<?> createPassport(@RequestBody Passport passport) {
         String validationMessage = validatePassportData(passport);
         if (!validationMessage.isEmpty()) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(validationMessage);
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -44,14 +44,14 @@ public class PassportController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Passport> updatePassport(@PathVariable Long id, @RequestBody Passport passportDetails) {
+    public ResponseEntity<?> updatePassport(@PathVariable Long id, @RequestBody Passport passportDetails) {
         Optional<Passport> passport = passportService.findById(id);
         if (passport.isPresent()) {
             Passport passportToUpdate = passport.get();
 
             String validationMessage = validatePassportData(passportDetails);
             if (!validationMessage.isEmpty()) {
-                return ResponseEntity.badRequest().body(null);
+                return ResponseEntity.badRequest().body(validationMessage);
             }
 
             passportToUpdate.setLastName(passportDetails.getLastName());
@@ -85,7 +85,7 @@ public class PassportController {
         if (passport.getGender() == null || (!passport.getGender().equals("Мужской") && !passport.getGender().equals("Женский")))
             return "Пол не может быть пустым (введите \"Мужской\" или \"Женский\").";
         if (!isValidDate(passport.getDateOfBirth()))
-            return "Дата рождения должна быть в формате YYYY-MM-DD.";
+            return "Дата рождения должна быть в формате YYYY-MM-DD и не из будущего.";
         if (passport.getPlaceOfBirth() == null || passport.getPlaceOfBirth().isEmpty())
             return "Место рождения не может быть пустым.";
         if (passport.getPassportSeries() == null || !Pattern.matches("\\d{4}", passport.getPassportSeries()))
@@ -93,7 +93,7 @@ public class PassportController {
         if (passport.getPassportNumber() == null || !Pattern.matches("\\d{6}", passport.getPassportNumber()))
             return "Номер паспорта должен состоять из 6 цифр.";
         if (!isValidDate(passport.getIssueDate()))
-            return "Дата выдачи должна быть в формате YYYY-MM-DD.";
+            return "Дата выдачи должна быть в формате YYYY-MM-DD и не из будущего.";
         if (passport.getIssuedBy() == null || passport.getIssuedBy().isEmpty())
             return "Поле \"Кем выдан\" не может быть пустым.";
         if (passport.getDepartmentCode() == null || !Pattern.matches("\\d{3}-\\d{3}", passport.getDepartmentCode()))
@@ -107,8 +107,8 @@ public class PassportController {
 
     private boolean isValidDate(String date) {
         try {
-            LocalDate.parse(date);
-            return true;
+            LocalDate parsedDate = LocalDate.parse(date);
+            return !parsedDate.isAfter(LocalDate.now());
         } catch (DateTimeParseException e) {
             return false;
         }
