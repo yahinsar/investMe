@@ -8,8 +8,13 @@ import ru.sgu.repository.UserRepository;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final EmailService emailService;
@@ -23,7 +28,9 @@ public class UserService {
     }
 
     public void registerUser(String username, String email, String password) {
+        logger.info("Попытка регистрации пользователя с username: {} и почтой: {}", username, email);
         if (userRepository.findByUsername(username).isPresent() || userRepository.findByEmail(email).isPresent()) {
+            logger.warn("Пользователь с username: {} или email: {} уже существует.", username, email);
             throw new IllegalArgumentException("Пользователь с таким username или email уже существует.");
         }
 
@@ -41,14 +48,17 @@ public class UserService {
         String activationToken = java.util.UUID.randomUUID().toString();
         user.setActivationToken(activationToken);
 
-        //Сохранение пользователя в БД (НУЖНО ДОБАВИТЬ ОБРАБОТКУ ТОГО, ЧТО ПОЛЬЗОВАТЕЛЬ УЖЕ ЕСТЬ)
+        //Сохранение пользователя в БД
         userRepository.save(user);
+        logger.info("Успешно зарегистрирован пользователь с username: {}", username);
 
         //Отправка письма на почту
         emailService.sendActivationEmail(email, activationToken);
+
     }
 
     public boolean activateUser(String token) {
+        logger.info("Попытка активации пользователя с токеном: {}", token);
         Optional<User> optionalUser = userRepository.findByActivationToken(token);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
@@ -59,6 +69,7 @@ public class UserService {
             //Сбрасывает токен активации
             user.setActivationToken(null);
             userRepository.save(user);
+            logger.info("Успешно активирован пользователь с username: {}", user.getUsername());
             return true;
         } else {
             return false;
@@ -66,10 +77,12 @@ public class UserService {
     }
 
     public Optional<User> findByUsername(String username) {
+        logger.info("Поиск пользователя по username: {}", username);
         return userRepository.findByUsername(username);
     }
 
     public boolean isEnabled(String username) {
+        logger.info("Проверка пользователя с username {} на активированный аккаунт", username);
         Optional<User> user = userRepository.findByUsername(username);
         return user.map(User::isEnabled).orElse(false);
     }
