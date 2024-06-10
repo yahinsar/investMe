@@ -15,9 +15,14 @@ import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/v1/passport")
 public class PassportController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PassportController.class);
 
     private final PassportService passportService;
     private final UserService userService;
@@ -30,8 +35,10 @@ public class PassportController {
 
     @PostMapping
     public ResponseEntity<?> createPassport(@RequestBody Passport passport) {
+        logger.debug("Пришел запрос на создание паспорта для пользователя: {}", passport.getUser().getUsername());
         String validationMessage = validatePassportData(passport);
         if (!validationMessage.isEmpty()) {
+            logger.error("Ошибка во введенных паспортных данных: {}", validationMessage);
             return ResponseEntity.badRequest().body(validationMessage);
         }
 
@@ -40,17 +47,20 @@ public class PassportController {
         User user = userService.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         passport.setUser(user);
         Passport savedPassport = passportService.save(passport);
+        logger.info("Создан паспорт для пользователя: {}", username);
         return ResponseEntity.ok(savedPassport);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePassport(@PathVariable Long id, @RequestBody Passport passportDetails) {
+        logger.debug("Пришел запрос на обновление паспорта для пользователя с id: {}", id);
         Optional<Passport> passport = passportService.findById(id);
         if (passport.isPresent()) {
             Passport passportToUpdate = passport.get();
 
             String validationMessage = validatePassportData(passportDetails);
             if (!validationMessage.isEmpty()) {
+                logger.error("Ошибка во введенных паспортных данных: {}", validationMessage);
                 return ResponseEntity.badRequest().body(validationMessage);
             }
 
@@ -69,8 +79,10 @@ public class PassportController {
             passportToUpdate.setResidencePlace(passportDetails.getResidencePlace());
 
             Passport updatedPassport = passportService.save(passportToUpdate);
+            logger.info("Обновлены паспортные данные для пользователя с id: {}", id);
             return ResponseEntity.ok(updatedPassport);
         } else {
+            logger.error("Не найден паспорт для пользователя с id: {}", id);
             return ResponseEntity.notFound().build();
         }
     }
@@ -134,6 +146,7 @@ public class PassportController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Passport> getPassport(@PathVariable Long id) {
+        logger.info("Получен запрос на получение паспорта по id: {}", id);
         Optional<Passport> passport = passportService.findById(id);
         if (passport.isPresent()) {
             return ResponseEntity.ok(passport.get());
@@ -144,6 +157,7 @@ public class PassportController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePassport(@PathVariable Long id) {
+        logger.info("Получен запрос на удаление паспорта по id: {}", id);
         if (passportService.existsById(id)) {
             passportService.deleteById(id);
             return ResponseEntity.ok().build();
@@ -156,6 +170,7 @@ public class PassportController {
     public ResponseEntity<Passport> getPassportForCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
+        logger.info("Получен запрос на получение паспорта по username: {}", username);
         Optional<User> user = userService.findByUsername(username);
         if (user.isPresent()) {
             Passport passport = passportService.findByUserId(user.get().getId());
@@ -177,8 +192,10 @@ public class PassportController {
 
         boolean is18yo = passportService.isUser18yo(user.getId());
         if (is18yo) {
+            logger.info("Пользователь {} достиг 18-ти лет. Для него доступ к сайту открыт", username);
             return ResponseEntity.ok("Добро пожаловать в ИНВЕСТИЦИИ");
         } else {
+            logger.info("Пользователь {} не достиг 18-ти лет. Для него доступ к сайту закрыт", username);
             return ResponseEntity.ok("Тебе доступ запрещен. Пошел вон отсюда.");
         }
     }

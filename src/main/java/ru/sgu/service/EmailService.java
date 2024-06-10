@@ -8,8 +8,13 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class EmailService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
 
@@ -19,6 +24,7 @@ public class EmailService {
     }
 
     public void sendActivationEmail(String recipientEmail, String activationToken) {
+        logger.info("Отправление письма для активации аккаунта на email: {}", recipientEmail);
 
         //Тема письма
         String subject = "Активация аккаунта";
@@ -42,8 +48,10 @@ public class EmailService {
 
             //Отправка
             mailSender.send(message);
+            logger.info("Успешно отправлено письмо на email: {}", recipientEmail);
 
         } catch (MessagingException e) {
+            logger.error("Ошибка при отправке письма с активацией на email: {}", recipientEmail, e);
             throw new IllegalArgumentException("Ошибка при отправке письма с активацией", e);
         }
     }
