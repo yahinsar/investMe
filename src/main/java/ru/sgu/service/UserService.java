@@ -23,6 +23,10 @@ public class UserService {
     }
 
     public void registerUser(String username, String email, String password) {
+        if (userRepository.findByUsername(username).isPresent() || userRepository.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("Пользователь с таким username или email уже существует.");
+        }
+
         //Заполнение полей пользователя
         User user = new User();
         user.setUsername(username);
@@ -63,5 +67,10 @@ public class UserService {
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    public boolean isEnabled(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        return user.map(User::isEnabled).orElse(false);
     }
 }

@@ -20,14 +20,14 @@ public class Main {
     public CommandLineRunner demo(JdbcTemplate jdbcTemplate, UserService userService, EmailService emailService) {
         return (args) -> {
 
-            String username = "shamil";
-            String email = "shamilyahin@yandex.ru";
-            String password = "password";
-
-            //Добавление пользователя в БД и отправка письма на почту
-            userService.registerUser(username, email, password);
-            System.out.println("Пользователь зарегистрирован, необходимо активировать учётную запись," +
-                    " нажав на ссылку в письме");
+//            String username = "shamil";
+//            String email = "shamilyahin@yandex.ru";
+//            String password = "password";
+//
+//            //Добавление пользователя в БД и отправка письма на почту
+//            userService.registerUser(username, email, password);
+//            System.out.println("Пользователь зарегистрирован, необходимо активировать учётную запись," +
+//                    " нажав на ссылку в письме");
         };
     }
 }

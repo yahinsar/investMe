@@ -1,0 +1,21 @@
+.passportForm-container {
+  width: 120%;
+  max-width: 550px;
+  margin: 10px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-top: 400px;
+}
+
+h2 {
+  font-size: 2em;
+  color: #000;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}

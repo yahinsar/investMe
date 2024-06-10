@@ -1,6 +1,7 @@
 package ru.sgu.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,8 +27,9 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+
     @PostMapping("/authenticate")
-    public AuthenticationResponse createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
@@ -35,10 +37,10 @@ public class AuthController {
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String jwt = jwtUtil.generateToken(userDetails);
-            return new AuthenticationResponse(jwt);
+            return ResponseEntity.ok(new AuthenticationResponse(jwt));
 
         } catch (AuthenticationException e) {
-            throw new Exception("Неправильно указан username или password", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неправильно указан username или password");
         }
     }
 
