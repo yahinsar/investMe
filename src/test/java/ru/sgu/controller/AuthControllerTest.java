@@ -19,6 +19,8 @@ import ru.sgu.util.JwtUtil;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import org.springframework.security.authentication.BadCredentialsException;
+
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
@@ -54,7 +56,7 @@ class AuthControllerTest {
     void createAuthenticationToken_shouldReturnUnauthorized() {
         AuthenticationRequest authenticationRequest = new AuthenticationRequest("testUser", "password");
 
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(AuthenticationException.class);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(new BadCredentialsException(""));
 
         ResponseEntity<?> responseEntity = authController.createAuthenticationToken(authenticationRequest);
 

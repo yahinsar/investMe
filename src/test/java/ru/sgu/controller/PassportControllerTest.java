@@ -36,7 +36,7 @@ class PassportControllerTest {
         Passport passport = new Passport();
         passport.setFirstName("");
 
-        ResponseEntity<Passport> responseEntity = passportController.createPassport(passport);
+        ResponseEntity<?> responseEntity = passportController.createPassport(passport);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -44,7 +44,19 @@ class PassportControllerTest {
     @Test
     void createPassport_shouldReturnOkWhenValid() {
         Passport passport = new Passport();
-        passport.setFirstName("Test");
+        passport.setLastName("TestLastName");
+        passport.setFirstName("TestFirstName");
+        passport.setMiddleName("TestMiddleName");
+        passport.setGender("Мужской");
+        passport.setDateOfBirth("2000-01-01");
+        passport.setPlaceOfBirth("TestPlace");
+        passport.setPassportSeries("1234");
+        passport.setPassportNumber("123456");
+        passport.setIssueDate("2020-01-01");
+        passport.setIssuedBy("TestIssuedBy");
+        passport.setDepartmentCode("123-456");
+        passport.setRegistrationPlace("TestRegistrationPlace");
+        passport.setResidencePlace("TestResidencePlace");
 
         Authentication auth = mock(Authentication.class);
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -53,11 +65,14 @@ class PassportControllerTest {
         when(userService.findByUsername("testUser")).thenReturn(Optional.of(new User()));
         when(passportService.save(any(Passport.class))).thenReturn(passport);
 
-        ResponseEntity<Passport> responseEntity = passportController.createPassport(passport);
+        ResponseEntity<?> responseEntity = passportController.createPassport(passport);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(responseEntity.getBody().getFirstName()).isEqualTo("Test");
+        assertThat(responseEntity.getBody()).isInstanceOf(Passport.class);
+        Passport responseBody = (Passport) responseEntity.getBody();
+        assertThat(responseBody.getFirstName()).isEqualTo("TestFirstName");
     }
+
 
     @Test
     void getPassportForCurrentUser_shouldReturnPassport() {
